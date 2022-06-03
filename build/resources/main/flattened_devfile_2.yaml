@@ -1,0 +1,286 @@
+commands:
+  - apply:
+      component: remote-runtime-injector
+    attributes:
+      controller.devfile.io/imported-by: theia-ide-quarkus-quickstart
+    id: init-container-command
+  - exec:
+      commandLine: ./mvnw package
+      component: tools
+      group:
+        isDefault: true
+        kind: build
+      workingDir: ${PROJECTS_ROOT}/quarkus-quickstarts/getting-started
+    id: package
+  - exec:
+      commandLine: pwd && echo "Hello World"
+      component: tools
+      group:
+        kind: build
+      label: Test
+      workingDir: ${PROJECTS_ROOT}
+    id: test
+  - exec:
+      commandLine: ./mvnw package -Dnative -Dmaven.test.skip -Dquarkus.native.native-image-xmx=2G
+      component: tools
+      group:
+        kind: build
+      label: Package Native
+      workingDir: ${PROJECTS_ROOT}/quarkus-quickstarts/getting-started
+    id: packagenative
+  - exec:
+      commandLine: ./mvnw compile quarkus:dev
+      component: tools
+      group:
+        isDefault: true
+        kind: run
+      label: Start Development mode (Hot reload + debug)
+      workingDir: ${PROJECTS_ROOT}/quarkus-quickstarts/getting-started
+    id: startdev
+  - exec:
+      commandLine: ./getting-started-1.0.0-SNAPSHOT-runner
+      component: ubi-minimal
+      group:
+        kind: run
+      label: Start Native
+      workingDir: ${PROJECTS_ROOT}/quarkus-quickstarts/getting-started/target
+    id: startnative
+  - apply:
+      component: project-clone
+    id: clone-projects
+components:
+  - attributes:
+      app.kubernetes.io/component: che-theia
+      app.kubernetes.io/part-of: che-theia.eclipse.org
+      controller.devfile.io/imported-by: theia-ide-quarkus-quickstart
+    container:
+      cpuLimit: 1500m
+      cpuRequest: 100m
+      endpoints:
+        - attributes:
+            controller.devfile.io/endpoint-url: https://172.16.94.21.nip.io/workspace6d3865162f11400a/theia-ide/3100/
+            cookiesAuthEnabled: true
+            discoverable: false
+            type: main
+            urlRewriteSupported: true
+          exposure: public
+          name: theia
+          protocol: https
+          secure: false
+          targetPort: 3100
+        - attributes:
+            controller.devfile.io/endpoint-url: https://172.16.94.21.nip.io/workspace6d3865162f11400a/theia-ide/webviews/
+            cookiesAuthEnabled: true
+            discoverable: false
+            type: webview
+            unique: true
+            urlRewriteSupported: true
+          exposure: public
+          name: webviews
+          protocol: https
+          secure: false
+          targetPort: 3100
+        - attributes:
+            controller.devfile.io/endpoint-url: https://172.16.94.21.nip.io/workspace6d3865162f11400a/theia-ide/mini-browser/
+            cookiesAuthEnabled: true
+            discoverable: false
+            type: mini-browser
+            unique: true
+            urlRewriteSupported: true
+          exposure: public
+          name: mini-browser
+          protocol: https
+          secure: false
+          targetPort: 3100
+        - attributes:
+            controller.devfile.io/endpoint-url: https://172.16.94.21.nip.io/workspace6d3865162f11400a/theia-ide/3130/
+            discoverable: false
+            type: ide-dev
+            urlRewriteSupported: true
+          exposure: public
+          name: theia-dev
+          protocol: http
+          targetPort: 3130
+        - attributes:
+            controller.devfile.io/endpoint-url: https://172.16.94.21.nip.io/workspace6d3865162f11400a/theia-ide/13131/
+            discoverable: false
+            urlRewriteSupported: true
+          exposure: public
+          name: theia-redirect-1
+          protocol: http
+          targetPort: 13131
+        - attributes:
+            controller.devfile.io/endpoint-url: https://172.16.94.21.nip.io/workspace6d3865162f11400a/theia-ide/13132/
+            discoverable: false
+            urlRewriteSupported: true
+          exposure: public
+          name: theia-redirect-2
+          protocol: http
+          targetPort: 13132
+        - attributes:
+            controller.devfile.io/endpoint-url: https://172.16.94.21.nip.io/workspace6d3865162f11400a/theia-ide/13133/
+            discoverable: false
+            urlRewriteSupported: true
+          exposure: public
+          name: theia-redirect-3
+          protocol: http
+          targetPort: 13133
+        - attributes:
+            controller.devfile.io/endpoint-url: wss://172.16.94.21.nip.io/workspace6d3865162f11400a/theia-ide/3333/
+            cookiesAuthEnabled: true
+            discoverable: false
+            type: collocated-terminal
+            urlRewriteSupported: true
+          exposure: public
+          name: terminal
+          protocol: wss
+          secure: false
+          targetPort: 3333
+      env:
+        - name: THEIA_PLUGINS
+          value: local-dir:///plugins
+        - name: HOSTED_PLUGIN_HOSTNAME
+          value: 0.0.0.0
+        - name: HOSTED_PLUGIN_PORT
+          value: "3130"
+        - name: THEIA_HOST
+          value: 127.0.0.1
+      image: quay.io/eclipse/che-theia:next
+      memoryLimit: 512M
+      mountSources: true
+      sourceMapping: /projects
+      volumeMounts:
+        - name: plugins
+          path: /plugins
+        - name: theia-local
+          path: /home/theia/.theia
+    name: theia-ide
+  - attributes:
+      controller.devfile.io/imported-by: theia-ide-quarkus-quickstart
+    name: plugins
+    volume: {}
+  - attributes:
+      controller.devfile.io/imported-by: theia-ide-quarkus-quickstart
+    name: theia-local
+    volume: {}
+  - attributes:
+      app.kubernetes.io/component: machine-exec
+      app.kubernetes.io/part-of: che-theia.eclipse.org
+      controller.devfile.io/imported-by: theia-ide-quarkus-quickstart
+    container:
+      command:
+        - /go/bin/che-machine-exec
+        - --url
+        - 127.0.0.1:3333
+        - --idle-timeout
+        - 15m
+      cpuLimit: 500m
+      cpuRequest: 30m
+      image: quay.io/eclipse/che-machine-exec:next
+      memoryLimit: 128Mi
+      memoryRequest: 32Mi
+      sourceMapping: /projects
+    name: che-machine-exec
+  - attributes:
+      app.kubernetes.io/component: remote-runtime-injector
+      app.kubernetes.io/part-of: che-theia.eclipse.org
+      controller.devfile.io/imported-by: theia-ide-quarkus-quickstart
+    container:
+      cpuLimit: 500m
+      cpuRequest: 30m
+      env:
+        - name: PLUGIN_REMOTE_ENDPOINT_EXECUTABLE
+          value: /remote-endpoint/plugin-remote-endpoint
+        - name: REMOTE_ENDPOINT_VOLUME_NAME
+          value: remote-endpoint
+      image: quay.io/eclipse/che-theia-endpoint-runtime-binary:next
+      memoryLimit: 128Mi
+      memoryRequest: 32Mi
+      sourceMapping: /projects
+      volumeMounts:
+        - name: plugins
+          path: /plugins
+        - name: remote-endpoint
+          path: /remote-endpoint
+    name: remote-runtime-injector
+  - attributes:
+      controller.devfile.io/imported-by: theia-ide-quarkus-quickstart
+    name: remote-endpoint
+    volume:
+      ephemeral: true
+  - attributes:
+      app.kubernetes.io/name: tools
+      che-theia.eclipse.org/vscode-extensions:
+        - https://download.jboss.org/jbosstools/vscode/stable/vscode-quarkus/vscode-quarkus-1.7.0-437.vsix
+        - https://download.jboss.org/jbosstools/static/jdt.ls/stable/java-0.82.0-369.vsix
+        - https://download.jboss.org/jbosstools/vscode/stable/vscode-microprofile/vscode-microprofile-0.1.1-48.vsix
+        - https://download.jboss.org/jbosstools/vscode/3rdparty/vscode-java-debug/vscode-java-debug-0.26.0.vsix
+        - https://open-vsx.org/api/vscjava/vscode-java-test/0.28.1/file/vscjava.vscode-java-test-0.28.1.vsix
+      che-theia.eclipse.org/vscode-preferences:
+        java.server.launchMode: Standard
+    container:
+      args:
+        - sh
+        - -c
+        - ${PLUGIN_REMOTE_ENDPOINT_EXECUTABLE}
+      endpoints:
+        - exposure: none
+          name: debug
+          protocol: tcp
+          targetPort: 5005
+        - attributes:
+            controller.devfile.io/endpoint-url: http://workspace6d3865162f11400a-1.172.16.94.21.nip.io/hello/greeting/che-user
+          exposure: public
+          name: hello-greeting-endpoint
+          path: /hello/greeting/che-user
+          protocol: http
+          targetPort: 8080
+      env:
+        - name: QUARKUS_HTTP_HOST
+          value: 0.0.0.0
+        - name: PLUGIN_REMOTE_ENDPOINT_EXECUTABLE
+          value: /remote-endpoint/plugin-remote-endpoint
+        - name: THEIA_PLUGINS
+          value: local-dir:///plugins/sidecars/tools
+      image: quay.io/devfile/universal-developer-image:ubi8-d433ed6
+      memoryLimit: 4G
+      mountSources: true
+      sourceMapping: /projects
+      volumeMounts:
+        - name: m2
+          path: /home/user/.m2
+        - name: remote-endpoint
+          path: /remote-endpoint
+        - name: plugins
+          path: /plugins
+    name: tools
+  - container:
+      args:
+        - -f
+        - /dev/null
+      command:
+        - tail
+      image: registry.access.redhat.com/ubi8/ubi-minimal
+      memoryLimit: 64M
+      mountSources: true
+      sourceMapping: /projects
+    name: ubi-minimal
+  - name: m2
+    volume:
+      size: 1G
+  - container:
+      cpuLimit: 1000m
+      cpuRequest: 100m
+      image: quay.io/devfile/project-clone:v0.11.0
+      memoryLimit: 1Gi
+      memoryRequest: 128Mi
+      mountSources: true
+    name: project-clone
+events:
+  preStart:
+    - init-container-command
+    - clone-projects
+projects:
+  - name: quarkus-quickstarts
+    zip:
+      location: http://devfile-registry.eclipse-che.svc:8080/resources/v2/quarkus-quickstarts.zip

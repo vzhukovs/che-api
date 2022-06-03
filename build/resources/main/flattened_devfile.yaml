@@ -1,0 +1,92 @@
+commands:
+- apply:
+    component: che-idea-injector
+  attributes:
+    controller.devfile.io/imported-by: intellij-idea-community-edition-workspace233e5486a56b4fdb
+  id: init-container-command
+- apply:
+    component: project-clone
+  id: clone-projects
+components:
+- attributes:
+    app.kubernetes.io/component: che-idea-injector
+    app.kubernetes.io/part-of: che-idea.eclipse.org
+    controller.devfile.io/imported-by: intellij-idea-community-edition-workspace233e5486a56b4fdb
+  container:
+    command:
+    - /projector/entrypoint-volume.sh
+    cpuLimit: 500m
+    cpuRequest: 30m
+    endpoints:
+    - attributes:
+        controller.devfile.io/endpoint-url: https://172.16.94.21.nip.io/workspace233e5486a56b4fdb/che-idea-runtime-description/8887/?backgroundColor=434343&wss
+        cookiesAuthEnabled: true
+        discoverable: false
+        type: main
+        urlRewriteSupported: true
+      exposure: internal
+      name: intellij
+      path: /?backgroundColor=434343&wss
+      protocol: http
+      secure: false
+      targetPort: 8887
+    env:
+    - name: PROJECTOR_ASSEMBLY_DIR
+      value: /projector
+    - name: PROJECTOR_CONFIG_DIR
+      value: /home/user/.jetbrains
+    image: quay.io/devfile/universal-developer-image:ubi8-0e189d9
+    memoryLimit: 2048Mi
+    memoryRequest: 256Mi
+    sourceMapping: /projects
+    volumeMounts:
+    - name: projector-volume
+      path: /projector
+    - name: projector-configuration
+      path: /home/user/.jetbrains
+  name: che-idea-runtime-description
+- attributes:
+    controller.devfile.io/imported-by: intellij-idea-community-edition-workspace233e5486a56b4fdb
+  name: projector-volume
+  volume: {}
+- attributes:
+    controller.devfile.io/imported-by: intellij-idea-community-edition-workspace233e5486a56b4fdb
+  name: projector-configuration
+  volume: {}
+- attributes:
+    controller.devfile.io/imported-by: intellij-idea-community-edition-workspace233e5486a56b4fdb
+  container:
+    command:
+    - /projector/entrypoint-init-container.sh
+    cpuLimit: 500m
+    cpuRequest: 30m
+    env:
+    - name: PROJECTOR_VOLUME_MOUNT
+      value: /projector-volume
+    - name: PROJECTOR_ASSEMBLY_DIR
+      value: /projector
+    image: quay.io/vzhukovs/che-idea:2020.3.4
+    memoryLimit: 128Mi
+    memoryRequest: 32Mi
+    sourceMapping: /projects
+    volumeMounts:
+    - name: projector-volume
+      path: /projector-volume
+  name: che-idea-injector
+- container:
+    cpuLimit: 1000m
+    cpuRequest: 100m
+    image: quay.io/devfile/project-clone:v0.11.0
+    memoryLimit: 1Gi
+    memoryRequest: 128Mi
+    mountSources: true
+  name: project-clone
+events:
+  preStart:
+  - init-container-command
+  - clone-projects
+projects:
+- git:
+    remotes:
+      origin: https://github.com/che-incubator/jetbrains-editor-images.git
+  name: jetbrains-editor-images
