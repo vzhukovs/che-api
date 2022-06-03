@@ -9,9 +9,9 @@ import io.kubernetes.client.openapi.ApiClient
 import io.kubernetes.client.openapi.apis.CustomObjectsApi
 import io.kubernetes.client.util.PatchUtils
 
-class K8sDevfileContentRetainer(private val k8sApi: ApiClient) : DevfileContentRetainer {
+class K8sWorkspaceLifecycleController(private val k8sApi: ApiClient) : WorkspaceLifecycleController {
 
-    override fun retainTemplateObject(templateObject: V1alpha2DevWorkspaceSpecTemplate) {
+    override fun stopWorkspace() {
         val customObjectsApi = CustomObjectsApi(k8sApi)
         val group = "workspace.devfile.io"
         val version = "v1alpha2"
@@ -19,8 +19,8 @@ class K8sDevfileContentRetainer(private val k8sApi: ApiClient) : DevfileContentR
         val patch = JsonArray()
         patch.add(JsonObject().apply {
             addProperty("op", "replace")
-            addProperty("path", "/spec/template")
-            add("value", Gson().toJsonTree(templateObject, V1alpha2DevWorkspaceSpecTemplate::class.java))
+            addProperty("path", "/spec/started")
+            addProperty("value", false)
         })
 
         PatchUtils.patch(V1alpha2DevWorkspaceSpecTemplate::class.java, {

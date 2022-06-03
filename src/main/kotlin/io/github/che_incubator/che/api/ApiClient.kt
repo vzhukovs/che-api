@@ -8,6 +8,7 @@ object ApiClient {
 
     private val k8sApi = ClientBuilder.cluster().build()
     private val devfileController: DevfileController
+    private val workspaceController: WorkspaceController
 
     init {
         k8sConfiguration.setDefaultApiClient(k8sApi)
@@ -19,6 +20,8 @@ object ApiClient {
             ),
             K8sDevfileContentRetainer(k8sApi)
         )
+
+        this.workspaceController = WorkspaceController(K8sWorkspaceLifecycleController(k8sApi))
     }
 
     object DevfileClient {
@@ -32,6 +35,20 @@ object ApiClient {
 
         fun retainTemplateObject(templateObject: V1alpha2DevWorkspaceSpecTemplate) {
             devfileController.retainTemplateObject(templateObject)
+        }
+    }
+
+    object WorkspaceClient {
+        fun getNamespace(): String {
+            return workspaceController.getNamespace()
+        }
+
+        fun getWorkspaceId(): String {
+            return workspaceController.getWorkspaceId()
+        }
+
+        fun stopWorkspace() {
+            workspaceController.stopWorkspace()
         }
     }
 

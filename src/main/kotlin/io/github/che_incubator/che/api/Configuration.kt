@@ -38,6 +38,17 @@ open class Configuration {
             return envVar
         }
 
+        val workspaceId: String
+        get() {
+            val envVar = System.getenv("DEVWORKSPACE_ID")
+
+            if (envVar.isNullOrEmpty()) {
+                throw IllegalStateException("Environment variable DEVWORKSPACE_ID is not set")
+            }
+
+            return envVar
+        }
+
         val devWorkspaceFlattenedDevfileParsingStrategy: DevWorkspaceSpecTemplateParsingStrategy
         get() {
             return when(devWorkspaceFlattenedDevfilePath.toFile().extension) {
