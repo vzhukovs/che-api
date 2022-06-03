@@ -1,13 +1,12 @@
 package io.github.che_incubator.che.api
 
 import io.github.che_incubator.devfile.kubernetes.client.models.V1alpha2DevWorkspaceSpecTemplate
-import io.kubernetes.client.openapi.ApiClient
 import io.kubernetes.client.util.ClientBuilder
 import io.kubernetes.client.openapi.Configuration as k8sConfiguration
 
 object ApiClient {
 
-    private val k8sApi: ApiClient = ClientBuilder.cluster().build()
+    private val k8sApi = ClientBuilder.cluster().build()
     private val devfileController: DevfileController
 
     init {
